@@ -25,8 +25,28 @@ from engine.battle.setup_battle_unit import setup_battle_unit
 from engine.menubackground.menubackground import MenuActor, MenuRotate, StaticImage
 from engine.updater.updater import ReversedLayeredUpdates
 
+from engine.game.menu_option import menu_option
+from engine.game.menu_main import menu_main
+from engine.game.menu_keybind import menu_keybind
+from engine.game.menu_game_editor import menu_game_editor
+from engine.game.loading_screen import loading_screen
+from engine.game.create_troop_sprite_pool import create_troop_sprite_pool
+from engine.game.create_troop_sprite import create_troop_sprite
+from engine.game.create_team_coa import create_team_coa
+from engine.game.create_sound_effect_pool import create_sound_effect_pool
+from engine.game.create_preview_map import create_preview_map
+from engine.game.create_config import create_config
+from engine.game.change_sound_volume import change_sound_volume
+from engine.game.change_battle_source import change_battle_source
+from engine.game.back_mainmenu import back_mainmenu
+from engine.game.assign_key import assign_key
+from engine.game.start_battle import start_battle
+from engine.game.read_selected_map_lore import read_selected_map_lore
 from engine.game.menu_custom_map_select import custom_map_list_on_select, custom_faction_list_on_select, \
-    custom_weather_list_on_select
+    custom_weather_list_on_select, menu_custom_map_select
+from engine.game.menu_preset_map_select import menu_preset_map_select
+from engine.game.menu_custom_leader_setup import menu_custom_leader_setup
+from engine.game.menu_custom_unit_setup import menu_custom_unit_setup, custom_set_list_on_select
 
 from engine.utility import load_image, load_images, csv_read, edit_config, load_base_button, text_objects, \
     number_to_minus_or_plus
@@ -90,70 +110,27 @@ class Game:
                                  "hat-1": "U. Arrow", "hat+1": "D. Arrow"}}
 
     # import from game
-
-    from engine.game import assign_key
-    assign_key = assign_key.assign_key
-
-    from engine.game import back_mainmenu
-    back_mainmenu = back_mainmenu.back_mainmenu
-
-    from engine.game import change_battle_source
-    change_battle_source = change_battle_source.change_battle_source
-
-    from engine.game import change_sound_volume
-    change_sound_volume = change_sound_volume.change_sound_volume
-
-    from engine.game import create_config
-    create_config = create_config.create_config
-
-    from engine.game import create_preview_map
-    create_preview_map = create_preview_map.create_preview_map
-
-    from engine.game import create_sound_effect_pool
-    create_sound_effect_pool = create_sound_effect_pool.create_sound_effect_pool
-
-    from engine.game import create_team_coa
-    create_team_coa = create_team_coa.create_team_coa
-
-    from engine.game import create_troop_sprite
-    create_troop_sprite = create_troop_sprite.create_troop_sprite
-
-    from engine.game import create_troop_sprite_pool
-    create_troop_sprite_pool = create_troop_sprite_pool.create_troop_sprite_pool
-
-    from engine.game import loading_screen
-    loading_screen = loading_screen.loading_screen
-
-    from engine.game import menu_game_editor
-    menu_game_editor = menu_game_editor.menu_game_editor
-
-    from engine.game import menu_keybind
-    menu_keybind = menu_keybind.menu_keybind
-
-    from engine.game import menu_main
-    menu_main = menu_main.menu_main
-
-    from engine.game import menu_custom_map_select
-    menu_custom_map_select = menu_custom_map_select.menu_custom_map_select
-
-    from engine.game import menu_option
-    menu_option = menu_option.menu_option
-
-    from engine.game import menu_preset_map_select
-    menu_preset_map_select = menu_preset_map_select.menu_preset_map_select
-
-    from engine.game import menu_custom_leader_setup
-    menu_custom_leader_setup = menu_custom_leader_setup.menu_custom_leader_setup
-
-    from engine.game import menu_custom_unit_setup
-    menu_custom_unit_setup = menu_custom_unit_setup.menu_custom_unit_setup
-
-    from engine.game import read_selected_map_lore
-    read_selected_map_lore = read_selected_map_lore.read_selected_map_lore
-
-    from engine.game import start_battle
-    start_battle = start_battle.start_battle
-
+    assign_key = assign_key
+    back_mainmenu = back_mainmenu
+    change_battle_source = change_battle_source
+    change_sound_volume = change_sound_volume
+    create_config = create_config
+    create_preview_map = create_preview_map
+    create_sound_effect_pool = create_sound_effect_pool
+    create_team_coa = create_team_coa
+    create_troop_sprite = create_troop_sprite
+    create_troop_sprite_pool = create_troop_sprite_pool
+    loading_screen = loading_screen
+    menu_game_editor = menu_game_editor
+    menu_keybind = menu_keybind
+    menu_main = menu_main
+    menu_custom_map_select = menu_custom_map_select
+    menu_option = menu_option
+    menu_preset_map_select = menu_preset_map_select
+    menu_custom_leader_setup = menu_custom_leader_setup
+    menu_custom_unit_setup = menu_custom_unit_setup
+    read_selected_map_lore = read_selected_map_lore
+    start_battle = start_battle
     lorebook_process = lorebook_process
     setup_battle_unit = setup_battle_unit
 
@@ -278,6 +255,7 @@ class Game:
         self.team_pos = {}  # for saving preview map unit pos
         self.play_map_data = {"info": {"weather": [[0, "09:00:00", 0, 0]]}, "unit": {"pos": {}}, "camp_pos": {}}
         self.play_source_data = {"unit": [], "event_log": {}, "weather": [[0, "09:00:00", 0, 0]]}
+        self.remember_custom_list = {}  # dict to save actual list and its localisation name item
 
         self.dt = 0
         self.text_delay = 0
@@ -494,17 +472,19 @@ class Game:
                                            items=ListAdapter(["None"]),
                                            parent=self.screen, item_size=18)
 
-        self.custom_unit_list_select = NameTextBox((self.custom_unit_list_box.image.get_width(), 60 * self.screen_scale[1]),
-                                              (self.custom_unit_list_box.rect.midtop[0],
-                                               self.custom_unit_list_box.rect.midtop[1] -
-                                               25 * self.screen_scale[1]),
-                                              "Selected: Leader List", box_colour=(240, 230, 175))
+        self.custom_unit_list_select = NameTextBox((self.custom_unit_list_box.image.get_width(),
+                                                    60 * self.screen_scale[1]),
+                                                   (self.custom_unit_list_box.rect.midtop[0],
+                                                    self.custom_unit_list_box.rect.midtop[1] -
+                                                    25 * self.screen_scale[1]), "Selected: Leader List",
+                                                   text_size=30 * self.screen_scale[1],
+                                                   box_colour=(240, 230, 175))
 
-        self.custom_unit_list_select_box = ListUI(pivot=(-0.9, -0.8), origin=(-1, -1), size=(.2, .75),
-                                                       items=ListAdapter(["Selected: Leader List",
-                                                                          "Selected: Preset Unit List",
-                                                                          "Selected: Preset Army List"]),
-                                                       parent=self.screen, item_size=18)
+        self.custom_unit_list_select_box = ListUI(pivot=(-0.9, -0.8), origin=(-1, -1), size=(.2, .2),
+                                                  items=ListAdapter(["Leader List", "Preset Unit List",
+                                                                     "Preset Army List"],
+                                                                    replace_on_select=custom_set_list_on_select),
+                                                  parent=self.screen, item_size=3)
 
         self.custom_battle_faction_list_box = ListUI(pivot=(-0.03, -0.1), origin=(-1, -1), size=(.3, .4),
                                                      items=ListAdapter(["None"] + self.faction_data.faction_name_list,

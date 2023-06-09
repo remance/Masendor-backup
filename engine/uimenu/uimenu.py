@@ -842,7 +842,8 @@ class NameTextBox(UIMenu):
         if center_text:
             text_rect = text_surface.get_rect(center=(self.image.get_width() / 2, self.image.get_height() / 2))
         else:  # text start at the left
-            text_rect = text_surface.get_rect(midleft=(int(3 * self.screen_scale[0]), self.image.get_height() / 2))
+            text_rect = text_surface.get_rect(midleft=(int(text_size * self.screen_scale[1]),
+                                                       self.image.get_height() / 2))
         self.image.blit(text_surface, text_rect)
 
         self.pos = pos
@@ -1362,9 +1363,8 @@ class TextPopup(UIMenu):
                 max_height = 0
                 max_width = width_text_wrapper
                 for text in self.text_input:
-                    image_height = (len(text) * (self.font_size ** 2 / 1.3) / width_text_wrapper)
+                    image_height = (len(text) * (self.font_size ** 2 / 1.2) / width_text_wrapper)
                     if image_height < self.font_size:  # only one line
-                        print(text)
                         text_image = Surface((width_text_wrapper, self.font_size))
                         text_image.fill((255, 255, 255))
                         surface = self.font.render(text, True, (0, 0, 0))
@@ -1376,7 +1376,7 @@ class TextPopup(UIMenu):
                         text_image.fill((255, 255, 255))
                         make_long_text(text_image, text, (self.font_size, self.font_size), self.font)
                         text_surface.append(text_image)
-                        max_height += text_image.get_height() + self.font_size + int(self.font_size / 5)
+                        max_height += text_image.get_height()
             else:
                 max_width = 0
                 max_height = 0

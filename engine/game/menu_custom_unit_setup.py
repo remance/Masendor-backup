@@ -6,6 +6,9 @@ from engine.game.menu_preset_map_select import leader_popup_text
 
 
 def menu_custom_unit_setup(self, esc_press):
+    if self.custom_unit_list_select_box in self.main_ui_updater:
+        if not self.custom_unit_list_select_box.mouse_over and self.cursor.is_select_just_up:  # click other stuffs
+            self.remove_ui_updater(self.custom_unit_list_select_box)
 
     if self.map_back_button.event_press or esc_press:
         self.menu_state = "custom_map"
@@ -57,6 +60,10 @@ def menu_custom_unit_setup(self, esc_press):
             self.add_ui_updater(self.org_chart, self.start_button)
 
             leader_change_team_unit(self)
+
+    elif self.custom_unit_list_select.event_press:
+        self.custom_unit_list_select_box.change_origin_with_pos((self.screen_width, self.screen_height / 1.2))
+        self.add_ui_updater(self.custom_unit_list_select_box)
 
     elif self.team_coa_box.mouse_over:
         for this_team in self.team_coa:  # User select any team by clicking on coat of arm
@@ -243,7 +250,10 @@ def unit_change_team_unit(self, new_faction=False, old_selected=None, add_plus=T
                 icon.kill()
             self.preview_unit.empty()
 
-            unit_list = []
+            self.remember_custom_list = {"unit": {"unit_local": [], "unit_list": []},
+                                         "leader": {"leader_local": [], "leader_list": []},
+                                         "army": {"army_local": [], "army_list": []},
+                                         "troop": {"troop_local": [], "troop_list": []}}
             if "Team Faction " + str(this_team.team) in self.play_map_data["info"]:
                 for unit_index, unit in enumerate(self.play_source_data["unit"]):
                     if unit["Team"] == this_team.team:
@@ -285,15 +295,18 @@ def unit_change_team_unit(self, new_faction=False, old_selected=None, add_plus=T
                 if add_plus:
                     self.preview_unit.add(TempUnitIcon(this_team.team, "+", None))
 
-                unit_list = create_unit_list(self, this_team)
+                create_unit_list(self, this_team)
 
             if new_faction:
+                self.remove_ui_updater(self.custom_unit_list_box)
+                create_unit_custom_list(self)
+                self.add_ui_updater(self.custom_unit_list_box)
                 self.remove_ui_updater(self.troop_list_box)
                 self.troop_list_box.__init__(self.troop_list_box.origin, self.troop_list_box.pivot,
                                              self.troop_list_box.relative_size_inside_container,
-                                             ListAdapter(unit_list,
-                                                        replace_on_select=custom_unit_list_on_select,
-                                                        replace_on_mouse_over=custom_unit_list_on_mouse_over),
+                                             ListAdapter(self.remember_custom_list["troop"]["troop_local"],
+                                                        replace_on_select=custom_troop_list_on_select,
+                                                        replace_on_mouse_over=custom_troop_list_on_mouse_over),
                                              self.troop_list_box.parent,
                                              self.troop_list_box.item_size,
                                              layer=self.troop_list_box._layer)
@@ -310,36 +323,61 @@ def unit_change_team_unit(self, new_faction=False, old_selected=None, add_plus=T
 
 
 def create_unit_list(self, coa, unit_selected=None):
-    unit_list = []
     unit_data = None
     for faction in coa.coa_images:
         if faction == 0:  # all faction
-            for this_faction in self.faction_data.faction_unit_list:
-                unit_list += list(self.faction_data.faction_unit_list[this_faction].keys())
-                if unit_selected and unit_selected in self.faction_data.faction_unit_list[this_faction]:
-                    unit_data = self.faction_data.faction_unit_list[this_faction][unit_selected]
+            # self.remember_custom_list["army"]["army_list"]
+            self.remember_custom_list["leader"]["leader_list"] = list(self.leader_data.leader_list.keys())
+            self.remember_custom_list["troop"]["troop_list"] = list(self.troop_data.troop_list.keys())
+            self.remember_custom_list["unit"]["unit_list"] += list(self.faction_data.faction_unit_list.keys())
+            if unit_selected and unit_selected in self.faction_data.faction_unit_list:
+                unit_data = self.faction_data.faction_unit_list[unit_selected]
         else:
-            unit_list += list(self.faction_data.faction_unit_list[faction].keys())
-            if unit_selected and unit_selected in self.faction_data.faction_unit_list[faction]:
-                unit_data = self.faction_data.faction_unit_list[faction][unit_selected]
+            for leader_id, leader in self.leader_data.leader_list.items():
+                if leader["Faction"] in coa.coa_images:
+                    self.remember_custom_list["leader"]["leader_list"].append(self.localisation.grab_text(leader_id))
+            for troop in self.troop_data.troop_list:
+                if self.troop_data.troop_list[troop]["Faction"] in coa.coa_images:
+                    self.remember_custom_list["troop"]["troop_list"].append(troop)
+            self.remember_custom_list["unit"]["unit_list"] += [key for key, value in
+                                                               self.faction_data.faction_unit_list.items() if value["Faction"] == faction]
+            if unit_selected and unit_selected in self.faction_data.faction_unit_list:
+                unit_data = self.faction_data.faction_unit_list[unit_selected]
 
-        unit_list = sorted((set(unit_list)), key=unit_list.index)
-    if not unit_selected:
-        return unit_list
-    else:
-        return unit_data
+        self.remember_custom_list["unit"]["unit_list"] = sorted((set(self.remember_custom_list["unit"]["unit_list"])),
+                                                                key=self.remember_custom_list["unit"]["unit_list"].index)
+        self.remember_custom_list["leader"]["leader_list"] = sorted((set(self.remember_custom_list["leader"]["leader_list"])),
+                                                                key=self.remember_custom_list["leader"]["leader_list"].index)
+        self.remember_custom_list["troop"]["troop_list"] = sorted((set(self.remember_custom_list["troop"]["troop_list"])),
+                                                                key=self.remember_custom_list["troop"]["troop_list"].index)
+
+        self.remember_custom_list["unit"]["unit_local"] = [self.localisation.grab_text(("unit", unit, "Name")) for
+                                                               unit in
+                                                               self.remember_custom_list["unit"]["unit_list"]]
+        self.remember_custom_list["leader"]["leader_local"] = [self.localisation.grab_text(("leader", leader, "Name")) for
+                                                               leader in
+                                                               self.remember_custom_list["leader"]["leader_list"]]
+        self.remember_custom_list["troop"]["troop_local"] = [self.localisation.grab_text(("troop", troop, "Name")) for
+                                                               troop in
+                                                               self.remember_custom_list["troop"]["troop_list"]]
+    return unit_data
 
 
 def custom_unit_list_on_mouse_over(self, item_index, item_text):
     game = self.game
     for coa in game.team_coa:
         if coa.selected:  # get unit for selected team
-            unit_data = create_unit_list(game, coa, unit_selected=item_text)
-            popup_text = [game.leader_data.leader_list[unit_data["Leader ID"]]["Name"]]  # make popup of unit data
-            for troop in unit_data["Troop"]:
-                popup_text += [game.troop_data.troop_list[troop]["Name"] + ": " +
-                               str(unit_data["Troop"][troop][0]) + " + " +
-                               str(unit_data["Troop"][troop][1])]
+            if "Leader List" in game.custom_unit_list_select.name:
+                popup_text = [game.leader_data.leader_list[game.remember_custom_list["leader"]["leader_list"][item_index]]["Name"]]
+            elif "Preset Unit List" in game.custom_unit_list_select.name:
+                unit_data = create_unit_list(game, coa, unit_selected=game.remember_custom_list["unit"]["unit_list"][item_index])
+                popup_text = [game.leader_data.leader_list[unit_data["Leader ID"]]["Name"]]  # make popup of unit data
+                for troop in unit_data["Troop"]:
+                    popup_text += [game.troop_data.troop_list[troop]["Name"] + ": " +
+                                   str(unit_data["Troop"][troop][0]) + " + " +
+                                   str(unit_data["Troop"][troop][1])]
+            elif "Preset Army List" in game.custom_unit_list_select.name:
+                popup_text = []
             game.text_popup.popup(game.cursor.rect, popup_text)
             game.add_ui_updater(game.text_popup)
             break
@@ -354,17 +392,31 @@ def custom_unit_list_on_select(self, item_index, item_text):
     """
     game = self.game
     self.last_index = item_index
+    selected_coa = None
     for coa in game.team_coa:
-        if coa.selected:  # get unit for selected team
-            if game.cursor.is_select_just_up:
-                has_unit_selected = False
+        if coa.selected:  # get unit for selected team, game must have one selected at all time
+            selected_coa = coa
+            break
+
+    if game.cursor.is_select_just_up:
+        has_unit_selected = False
+        if "Preset Army List" in game.custom_unit_list_select.name:  # change entire team army
+            pass
+        else:
+            if "Leader List" in game.custom_unit_list_select.name:  # add/change leader with unit
                 for this_unit in game.unit_icon:
                     if this_unit.selected:
                         if this_unit.who.name == "+":  # add new unit
-                            add_unit_data(game, coa, item_text)
+                            game.play_source_data["unit"][this_unit.who.map_id]["Leader ID"] = \
+                                game.remember_custom_list["leader"]["leader_list"][item_index]
+            elif "Preset Unit List" in game.custom_unit_list_select.name:  # add/change unit with preset one
+                for this_unit in game.unit_icon:
+                    if this_unit.selected:
+                        if this_unit.who.name == "+":  # add new unit
+                            add_unit_data(game, selected_coa, item_index)
                             old_selected = None
                         else:  # change existed
-                            unit_data = make_unit_data(game, coa, item_text)
+                            unit_data = make_unit_data(game, selected_coa, item_text)
                             unit_data["ID"] = this_unit.who.map_id
                             game.play_source_data["unit"][this_unit.who.map_id] = unit_data
                             old_selected = this_unit.who.index
@@ -381,17 +433,41 @@ def custom_unit_list_on_select(self, item_index, item_text):
                         unit_change_team_unit(game, old_selected=old_selected)
                         game.map_preview.change_mode(1,
                                                      team_pos_list=game.play_map_data["unit"]["pos"],
-                                                     camp_pos_list=game.play_map_data["camp_pos"], selected=old_selected)
+                                                     camp_pos_list=game.play_map_data["camp_pos"],
+                                                     selected=old_selected)
                         break
 
                 if not has_unit_selected:  # no unit selected, consider as adding new unit
-                    for coa in game.team_coa:
-                        if coa.selected:  # add unit for selected team
-                            add_unit_data(game, coa, item_text)
-                            unit_change_team_unit(game)
-                            game.map_preview.change_mode(1, team_pos_list=game.play_map_data["unit"]["pos"],
-                                                         camp_pos_list=game.play_map_data["camp_pos"])
-            break
+                    add_unit_data(game, selected_coa, item_index)
+                    unit_change_team_unit(game)
+                    game.map_preview.change_mode(1, team_pos_list=game.play_map_data["unit"]["pos"],
+                                                 camp_pos_list=game.play_map_data["camp_pos"])
+
+
+def custom_troop_list_on_select(self, item_index, item_text):
+    pass
+
+
+def custom_troop_list_on_mouse_over(self, item_index, item_text):
+    game = self.game
+    self.last_index = item_index
+    troop_id = game.remember_custom_list["troop"]["troop_list"][item_index]
+    popup_text = game.localisation.grab_text(("troop", troop_id))
+    popup_text = [popup_text["Name"],
+                  game.localisation.grab_text(("troop_grade",
+                                               game.troop_data.troop_list[troop_id]["Grade"], "Name")) + " "
+                  + game.localisation.grab_text(("troop_class",
+                                                 game.troop_data.troop_list[troop_id]["Troop Class"], "Name")),
+                  popup_text["Description"]]
+    game.text_popup.popup(game.cursor.rect, popup_text, width_text_wrapper=400)
+    game.add_ui_updater(game.text_popup)
+
+
+def custom_set_list_on_select(self, item_index, item_text):
+    game = self.game
+    self.last_index = item_index
+    game.custom_unit_list_select.rename("Selected: " + item_text)
+    game.remove_ui_updater(game.custom_unit_list_select_box)
 
 
 def make_unit_data(game, coa, item_text):
@@ -401,10 +477,40 @@ def make_unit_data(game, coa, item_text):
     return unit_data
 
 
-def add_unit_data(game, coa, item_text):
+def add_unit_data(game, coa, item_index):
     if coa.team not in game.play_map_data["unit"]:
         game.play_map_data["unit"][coa.team] = []
-    unit_data = make_unit_data(game, coa, item_text)
+    unit_data = create_unit_list(game, coa, unit_selected=game.remember_custom_list["unit"]["unit_list"][item_index])
     game.play_map_data["unit"][coa.team].append(unit_data)
     game.play_source_data["unit"].append(unit_data)
     unit_data["ID"] = len(game.play_source_data["unit"]) - 1
+
+
+def create_unit_custom_list(game):
+    if "Leader List" in game.custom_unit_list_select.name:
+        game.custom_unit_list_box.__init__(game.custom_unit_list_box.origin, game.custom_unit_list_box.pivot,
+                                           game.custom_unit_list_box.relative_size_inside_container,
+                                           ListAdapter(game.remember_custom_list["leader"]["leader_local"],
+                                                       replace_on_select=custom_unit_list_on_select,
+                                                       replace_on_mouse_over=custom_unit_list_on_mouse_over),
+                                           game.custom_unit_list_box.parent,
+                                           game.custom_unit_list_box.item_size,
+                                           layer=game.custom_unit_list_box._layer)
+    elif "Preset Unit List" in game.custom_unit_list_select.name:
+        game.custom_unit_list_box.__init__(game.custom_unit_list_box.origin, game.custom_unit_list_box.pivot,
+                                           game.custom_unit_list_box.relative_size_inside_container,
+                                           ListAdapter(game.remember_custom_list["unit"]["unit_local"],
+                                                       replace_on_select=custom_unit_list_on_select,
+                                                       replace_on_mouse_over=custom_unit_list_on_mouse_over),
+                                           game.custom_unit_list_box.parent,
+                                           game.custom_unit_list_box.item_size,
+                                           layer=game.custom_unit_list_box._layer)
+    elif "Preset Army List" in game.custom_unit_list_select.name:
+        game.custom_unit_list_box.__init__(game.custom_unit_list_box.origin, game.custom_unit_list_box.pivot,
+                                           game.custom_unit_list_box.relative_size_inside_container,
+                                           ListAdapter(["None"],
+                                                       replace_on_select=custom_unit_list_on_select,
+                                                       replace_on_mouse_over=custom_unit_list_on_mouse_over),
+                                           game.custom_unit_list_box.parent,
+                                           game.custom_unit_list_box.item_size,
+                                           layer=game.custom_unit_list_box._layer)

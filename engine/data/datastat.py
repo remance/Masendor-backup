@@ -533,28 +533,27 @@ class FactionData(GameData):
 
         self.faction_lore = self.localisation.create_lore_data("faction")
         self.faction_unit_list = {}
-        part_folder = Path(os.path.join(self.module_dir, "faction", "unit"))
-        subdirectories = [os.sep.join(os.path.normpath(x).split(os.sep)[-1:]) for x in
-                          part_folder.iterdir()]
-        for folder in subdirectories:
-            self.faction_unit_list[int(folder[-1])] = {}
-            with open(os.path.join(self.module_dir, "faction", "unit", folder[-1],
-                                   "unit.csv"), encoding="utf-8", mode="r") as edit_file:
-                rd = tuple(csv.reader(edit_file, quoting=csv.QUOTE_ALL))
-                header = rd[0]
-                for row in rd[1:]:
-                    for n, i in enumerate(row):
-                        if header[n] == "Troop":
-                            if "," in i:
-                                row[n] = i.split(",")
-                            else:
-                                row[n] = [i]
+        with open(os.path.join(self.module_dir, "faction", "custom_unit.csv"), encoding="utf-8",
+                  mode="r") as edit_file:
+            rd = tuple(csv.reader(edit_file, quoting=csv.QUOTE_ALL))
+            header = rd[0]
+            for row in rd[1:]:
+                for n, i in enumerate(row):
+                    if header[n] == "Troop":
+                        if "," in i:
+                            row[n] = i.split(",")
+                        elif i:
+                            row[n] = [i]
+                        if row[n]:  # not empty
                             row[n] = {item.split(":")[0]:
                                           [int(item2) for item2 in item.split(":")[1].split("/")] for item in row[n]}
-                    self.faction_unit_list[int(folder[-1])][row[0]] = {header[index + 1]: stuff for index, stuff in
-                                                                       enumerate(row[1:])}
-                    self.faction_unit_list[int(folder[-1])][row[0]]["Faction"] = int(folder[-1])  # add faction iD
-                edit_file.close()
+                    if header[n] == "Faction":
+                        if i:
+                            row[n] = int(i)
+                self.faction_unit_list[row[0]] = {header[index + 1]: stuff for index, stuff in
+                                                  enumerate(row[1:])}
+            edit_file.close()
+        self.faction_unit_lore = self.localisation.create_lore_data("custom_unit")
 
         images_old = load_images(self.module_dir, screen_scale=self.screen_scale,
                                  subfolder=("faction", "coa"))  # coa_list images list

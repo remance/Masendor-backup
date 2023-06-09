@@ -27,8 +27,10 @@ class Localisation:
         self.read_module_lore("concept", "concept")
         self.read_module_lore("history", "history")
         self.read_module_lore("faction", "faction")
+        self.read_module_lore("custom_unit", "custom_unit")
         self.read_module_lore("troop", "troop")
-
+        self.read_module_lore("troop_grade", "troop_grade")
+        self.read_module_lore("troop_class", "troop_class")
         self.read_module_lore(("troop_weapon", "mount_weapon"), "weapon")
         self.read_module_lore("troop_armour", "troop_armour")
         self.read_module_lore("mount", "mount")
