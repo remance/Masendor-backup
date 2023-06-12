@@ -76,10 +76,8 @@ def menu_option(self, esc_press):
         change_resolution(self, (self.screen_width, "", self.screen_height))
 
     elif self.profile_box.event_press:
-        self.input_popup = ("text_input", "profile_name")
+        self.activate_input_popup(("text_input", "profile_name"), "Profile Name:", self.input_ui_popup)
         self.input_box.text_start(self.profile_name)
-        self.input_ui.change_instruction("Profile Name:")
-        self.add_ui_updater(self.input_ui_popup)
 
     for key, value in self.option_menu_sliders.items():
         if value.event:  # press on slider bar

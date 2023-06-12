@@ -2,6 +2,7 @@ import pygame
 
 from engine.uimenu.uimenu import UIMenu
 from engine.utility import make_long_text, load_image
+from engine.unit.unit import make_no_face_portrait
 
 # TODO paragraph syntax,
 
@@ -260,16 +261,9 @@ class Lorebook(UIMenu):
             try:
                 self.portrait = self.leader_data.images[
                     self.stat_data[self.subsection]["True ID"]]  # get leader portrait based on subsection number
-            except KeyError:
-                self.portrait = self.leader_data.images[
-                    "other"].copy()  # Use Unknown leader image if there is none in list
+            except KeyError:  # use Unknown leader image if there is none in list
                 name = self.stat_data[self.subsection]["Name"].split(" ")[0]
-                font = pygame.font.Font(self.ui_font["text_paragraph"],
-                                        int(100 / (len(name) / 3) * self.screen_scale[1]))
-                text_image = font.render(name, True, pygame.Color("white"))
-                text_rect = text_image.get_rect(
-                    center=(self.portrait.get_width() / 2, self.portrait.get_height() / 1.3))
-                self.portrait.blit(text_image, text_rect)
+                self.portrait = make_no_face_portrait(name, self.leader_data)
 
             self.portrait = pygame.transform.scale(self.portrait, (int(200 * self.screen_scale[0]),
                                                                    int(200 * self.screen_scale[

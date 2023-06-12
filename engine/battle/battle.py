@@ -150,6 +150,7 @@ class Battle:
         self.button_ui = game.button_ui
 
         self.single_text_popup = game.text_popup
+        self.activate_input_popup = game.activate_input_popup
 
         self.skill_icon = game.skill_icon
         self.effect_icon = game.effect_icon
@@ -159,8 +160,8 @@ class Battle:
         self.input_ok_button = game.input_ok_button
         self.input_cancel_button = game.input_cancel_button
         self.input_ui_popup = game.input_ui_popup
-        self.confirm_ui = game.confirm_ui
         self.confirm_ui_popup = game.confirm_ui_popup
+        self.all_input_ui_popup = game.all_input_ui_popup
 
         self.weather_matter = game.weather_matter
         self.weather_effect = game.weather_effect
@@ -641,7 +642,7 @@ class Battle:
             for event in pygame.event.get():  # get event that happen
                 if event.type == QUIT:  # quit self
                     self.input_popup = ("confirm_input", "quit")
-                    self.confirm_ui.change_instruction("Quit Game?")
+                    self.input_ui.change_instruction("Quit Game?")
                     self.add_ui_updater(self.confirm_ui_popup, self.cursor)
 
                 # elif event.type == self.SONG_END:  # change music track

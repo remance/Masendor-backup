@@ -33,7 +33,7 @@ def menu_preset_map_select(self, esc_press):
                     icon.kill()
                 self.preview_unit.empty()
 
-                self.preview_unit.add(TempUnitIcon(this_team.team, "None", None))
+                self.preview_unit.add(TempUnitIcon(this_team.team, "None", "None", None))
                 self.setup_battle_unit(self.preview_unit, preview=self.team_selected)
 
                 self.unit_selector.setup_unit_icon(self.unit_icon, self.preview_unit)
@@ -208,5 +208,4 @@ def leader_popup_text(self, icon):
                     popup_text += [self.troop_data.troop_list[troop]["Name"] + ": " +
                                    new_value]
                 break
-
         return popup_text

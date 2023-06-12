@@ -75,6 +75,4 @@ def menu_main(self, esc_press):
         # self.background = self.background_image["option"]
 
     elif self.quit_button.event or esc_press:  # open quit game confirmation input
-        self.input_popup = ("confirm_input", "quit")
-        self.confirm_ui.change_instruction("Quit Game?")
-        self.add_ui_updater(self.confirm_ui_popup)
+        self.activate_input_popup(("confirm_input", "quit"), "Quit Game?", self.confirm_ui_popup)

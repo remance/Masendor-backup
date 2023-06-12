@@ -38,10 +38,10 @@
 "SAX=4","Godric’s Saxon Archers","SAX-4","SAX+1:10/100,SAX+4:10/50",2
 "SAX=5","Thurkill’s Saxon Spearmen","SAX-5","SAX+1:10/100,SAX+3:10/50",2
 "SAX=6","Edric’s Saxon Slingers","SAX-6","SAX+1:10/100,SAX+5:10/50",2
-"SAX=7","Son of Helloc’s Saxon Skirmishers","SAX-10","SAX+1:10/100,SAX+6:10/50",2
-"SAX=8","Breme’s Saxon Infantries","SAX-7","SAX+1:10/100,SAX+2:10/50",2
-"SAX=9","Aelfwig’s Brethrens","SAX-8","CHR+1:5/20",2
-"SAX=10","Aelfric’s Saxon Spearmen","SAX-9","SAX+1:5/50,SAX+3:10/100",2
+"SAX=7","Breme’s Saxon Infantries","SAX-7","SAX+1:10/100,SAX+2:10/50",2
+"SAX=8","Aelfwig’s Brethrens","SAX-8","CHR+1:2/10",2
+"SAX=9","Aelfric’s Saxon Spearmen","SAX-9","SAX+1:5/50,SAX+3:10/100",2
+"SAX=10","Son of Helloc’s Saxon Skirmishers","SAX-10","SAX+1:10/100,SAX+6:10/50",2
 "SAX=11","Huscarl Captain’s Saxon Fryds","CSAX-1","SAX+8:5/20,SAX+1:10/50",2
 "SAX=12","Huscarl Captain’s Unit","CSAX-1","SAX+8:10/50",2
 "SAX=13","Huscarl Captain’s Saxon Spearmen","CSAX-1","SAX+8:5/20,SAX+3:10/50",2

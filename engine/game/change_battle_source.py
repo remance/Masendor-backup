@@ -44,7 +44,7 @@ def change_battle_source(self):
         icon.kill()
     self.preview_unit.empty()
 
-    self.preview_unit.add(TempUnitIcon(self.team_selected, "None", None))
+    self.preview_unit.add(TempUnitIcon(self.team_selected, "None", "None", None))
     self.setup_battle_unit(self.preview_unit, preview=self.team_selected)
 
     self.unit_selector.setup_unit_icon(self.unit_icon, self.preview_unit)

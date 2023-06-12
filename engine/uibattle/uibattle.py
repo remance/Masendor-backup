@@ -793,7 +793,7 @@ class UnitSelector(UIBattle):
                     if index == 0:
                         start_column = self.rect.topleft[0] + (this_subunit.portrait.get_width() / 1.5)
                         column = start_column
-                        row = self.rect.topleft[1] + (this_subunit.portrait.get_height() / 1.5)
+                        row = self.rect.topleft[1] + (this_subunit.portrait.get_height() / 2)
                     if index >= current_index:
                         new_icon = UnitIcon((column, row), this_subunit,
                                             (int(this_subunit.portrait.get_width() * self.icon_scale),
@@ -885,22 +885,21 @@ class UnitIcon(UIBattle, Sprite):
 
 
 class TempUnitIcon(UIBattle):
-    def __init__(self, team, image, index, map_id=None, coa=None):
+    def __init__(self, team, name, image, index, map_id=None, coa=None):
         UIBattle.__init__(self)
         self.team = team
         self.index = index
         self.map_id = map_id
         self.coa = coa
         self.portrait = Surface((200 * self.screen_scale[0], 200 * self.screen_scale[1]), SRCALPHA)
+        self.name = name
         if type(image) in (int, float, str):  # text instead of picture
-            self.name = str(image)
             font = Font(self.ui_font["main_button"],
-                        int(120 / (len(self.name) / 3) * self.screen_scale[1]))
-            image_surface = font.render(self.name, True, (0, 0, 0))
+                        int(120 / (len(image) / 3) * self.screen_scale[1]))
+            image_surface = font.render(str(image), True, (0, 0, 0))
             image_rect = image_surface.get_rect(center=(self.portrait.get_width() / 2, self.portrait.get_height() / 2))
             self.portrait.blit(image_surface, image_rect)
         else:
-            self.name = image
             image_rect = image.get_rect(center=(self.portrait.get_width() / 2, self.portrait.get_height() / 2))
             self.portrait.blit(image, image_rect)
         self.is_leader = True

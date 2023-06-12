@@ -74,7 +74,7 @@ def menu_custom_leader_setup(self, esc_press):
                                                          self.play_map_data["unit"]["pos"][unit.who.team][
                                                              unit.who.index])
                         self.org_chart.add_chart([unit2 for unit2 in self.play_source_data["unit"] if
-                                                  unit2["Team"] == unit.team], self.preview_unit,
+                                                  unit2["Team"] == unit.who.team], self.preview_unit,
                                                  selected=unit.who.index)
                     elif self.cursor.is_alt_select_just_up:
                         for other_icon in self.unit_icon:
@@ -101,7 +101,7 @@ def menu_custom_leader_setup(self, esc_press):
                                            str(self.play_map_data["unit"][subunit.team][subunit.index]["Troop"][
                                                    troop][1])]
                         self.text_popup.popup(self.cursor.rect, popup_text)
-                        self.add_main_ui_updater(self.text_popup)
+                        self.add_ui_updater(self.text_popup)
 
                         if self.cursor.is_alt_select_just_up:
                             for subunit2 in self.unit_icon:
@@ -168,7 +168,8 @@ def menu_custom_leader_setup(self, esc_press):
         leader_change_team_unit(self)
         self.org_chart.add_chart([], self.preview_unit)  # reset chart
 
-        self.add_ui_updater(self.troop_list_box, self.select_button)
+        self.add_ui_updater(self.troop_list_box, self.select_button,
+                            self.custom_unit_list_box, self.troop_list_box, self.custom_unit_list_select)
         for coa in self.team_coa:
             if coa.selected:  # get unit for selected team
                 unit_list = []
@@ -189,10 +190,11 @@ def menu_custom_leader_setup(self, esc_press):
 
     elif self.unit_model_room.mouse_over:
         if self.unit_selected is not None:
+            leader_id = [item for item in self.play_source_data['unit'] if
+                         item["ID"] == self.unit_selected][0]["Leader ID"]
             self.text_popup.popup(self.cursor.rect,
-                                  (self.leader_data.leader_lore[
-                                              [item for item in self.play_map_data[self.map_source_selected]['unit'] if
-                                               item["ID"] == self.unit_selected][0]["Leader ID"]]["Description"],),
+                                  (self.leader_data.leader_lore[leader_id]["Description"],),
+                                  shown_id=("model", leader_id, self.unit_selected),
                                   width_text_wrapper=500)
             self.add_ui_updater(self.text_popup)
 

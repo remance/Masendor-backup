@@ -540,16 +540,9 @@ class Unit(sprite.Sprite):
             self.group_pos_list = {}
 
             if self.troop_id.lower() in self.leader_data.images:  # Put leader image into leader slot
-                self.portrait = self.leader_data.images[self.troop_id.lower()].copy()
+                self.portrait = self.leader_data.images[self.troop_id].copy()
             else:  # Use Unknown leader image if there is no specific portrait in data
-                self.portrait = self.leader_data.images["other"].copy()
-                name = self.name.split(" ")[0]
-                text_font = font.Font(self.battle.game.ui_font["text_paragraph"],
-                                      int(90 / (len(name) / 3) * self.screen_scale[1]))
-                text_image = text_font.render(name, True, Color("white"))
-                text_rect = text_image.get_rect(center=(self.portrait.get_width() / 2,
-                                                        self.portrait.get_height() / 1.3))
-                self.portrait.blit(text_image, text_rect)
+                self.portrait = make_no_face_portrait(self.name, self.leader_data)
 
         self.race = stat["Race"]  # creature race
         race_stat = self.troop_data.race_list[stat["Race"]]
@@ -1234,3 +1227,17 @@ class Troop(Unit):
                  leader_unit, coa):
         super().__init__(troop_id, game_id, map_id, team, start_pos, start_angle, start_hp, start_stamina,
                          leader_unit, coa)
+
+
+def make_no_face_portrait(name, leader_data):
+    from engine.game.game import Game
+    game = Game.game
+    portrait = leader_data.images["OTHER"].copy()
+    name = name.split(" ")[0]
+    text_font = font.Font(game.ui_font["text_paragraph"],
+                          int(90 / (len(name) / 3) * game.screen_scale[1]))
+    text_image = text_font.render(name, True, Color("white"))
+    text_rect = text_image.get_rect(center=(portrait.get_width() / 2,
+                                            portrait.get_height() / 1.3))
+    portrait.blit(text_image, text_rect)
+    return portrait

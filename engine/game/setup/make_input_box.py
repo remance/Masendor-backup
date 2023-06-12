@@ -20,8 +20,5 @@ def make_input_box(main_dir, screen_scale, screen_rect, image_list):
 
     input_box = InputBox(input_ui.rect.center, input_ui.image.get_width())  # user text input box
 
-    confirm_ui = InputUI(input_ui_image,
-                         (screen_rect.width / 2, screen_rect.height / 2))  # user confirm input ui box popup
-
     return {"input_ui": input_ui, "input_ok_button": input_ok_button, "input_close_button": input_close_button,
-            "input_cancel_button": input_cancel_button, "input_box": input_box, "confirm_ui": confirm_ui}
+            "input_cancel_button": input_cancel_button, "input_box": input_box}

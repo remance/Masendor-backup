@@ -27,8 +27,6 @@ def assign_key(self, key_assign):  # TODO prevent player from input right hat jo
         old_action = \
             tuple(self.player1_key_bind[self.config["USER"]["control player 1"]].keys())[
                 old_action]
-        self.confirm_ui.change_instruction("Swap key with " + old_action + " ?")
-        self.input_popup = (
-            "confirm_input", ("replace key", self.input_popup[1], old_action))
-        self.remove_ui_updater(*self.input_ui_popup, *self.confirm_ui_popup, *self.inform_ui_popup)
-        self.add_ui_updater(self.confirm_ui_popup)
+        self.activate_input_popup(("confirm_input", ("replace key", self.input_popup[1], old_action)),
+                                  "Swap key with " + old_action + " ?",
+                                  self.confirm_ui_popup)

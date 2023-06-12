@@ -43,9 +43,7 @@ def menu_custom_map_select(self, esc_press):
             unit_change_team_unit(self, new_faction=True)
 
         else:
-            self.input_popup = ("confirm_input", "warning")
-            self.input_ui.change_instruction("Require at least 2 teams")
-            self.add_ui_updater(self.inform_ui_popup)
+            self.activate_input_popup(("confirm_input", "warning"), "Require 2+ teams", self.inform_ui_popup)
 
     elif self.team_coa_box.mouse_over:
         for this_team in self.team_coa:  # User select any team by clicking on coat of arm
@@ -72,8 +70,8 @@ def menu_custom_map_select(self, esc_press):
                 self.camp_icon = []
                 if this_team.team in self.play_map_data["camp_pos"]:
                     for camp in self.play_map_data["camp_pos"][this_team.team]:
-                        self.camp_icon.append(TempUnitIcon(this_team.team, camp[1], 0))
-                    self.camp_icon.append(TempUnitIcon(this_team.team, "+", 0))
+                        self.camp_icon.append(TempUnitIcon(this_team.team, camp[1], camp[1], 0))
+                    self.camp_icon.append(TempUnitIcon(this_team.team, "+", "+", 0))
                 self.unit_selector.setup_unit_icon(self.unit_icon, self.camp_icon)
 
                 for this_team2 in self.team_coa:
@@ -97,9 +95,7 @@ def menu_custom_map_select(self, esc_press):
             self.add_ui_updater(self.weather_list_box)
 
         elif self.wind_custom_select.event_press:
-            self.input_popup = ("text_input", "wind")
-            self.input_ui.change_instruction("Wind Direction Degree:")
-            self.add_ui_updater(self.input_ui_popup)
+            self.activate_input_popup(("text_input", "wind"), "Wind Direction Degree:", self.input_ui_popup)
 
     if self.cursor.is_alt_select_just_up and self.map_preview.mouse_over:
         for index, icon in enumerate(self.unit_icon):  # place selected camp on map, require camp size input
@@ -108,10 +104,8 @@ def menu_custom_map_select(self, esc_press):
                     (int(self.cursor.pos[0] - self.map_preview.rect.x) * self.map_preview.map_scale_width),
                     int((self.cursor.pos[1] - self.map_preview.rect.y) * self.map_preview.map_scale_height))
                 if icon.who.name == "+":
-                    self.input_popup = ("text_input", "custom_camp_size/" + str(map_pos) + "/" +
-                                        str(icon.who.team))
-                    self.input_ui.change_instruction("Camp Size Value:")
-                    self.add_ui_updater(self.input_ui_popup)
+                    self.activate_input_popup(("text_input", "custom_camp_size/" + str(map_pos) + "/" +
+                                               str(icon.who.team)), "Camp Size Value:", self.input_ui_popup)
                 else:
                     self.play_map_data["camp_pos"][icon.who.team][index][0] = map_pos
                 self.map_preview.change_mode(1, camp_pos_list=self.play_map_data["camp_pos"])
@@ -221,7 +215,7 @@ def custom_faction_list_on_select(self, item_index, item_text):
                     game.camp_icon = []
 
                 if not game.camp_icon or game.camp_icon[-1].name != "+":
-                    game.camp_icon.append(TempUnitIcon(coa.team, "+", 0))
+                    game.camp_icon.append(TempUnitIcon(coa.team, "+", "+", 0))
 
             else:  # team no longer exist
                 if coa.team in game.play_map_data["unit"]:

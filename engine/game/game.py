@@ -25,11 +25,13 @@ from engine.battle.setup_battle_unit import setup_battle_unit
 from engine.menubackground.menubackground import MenuActor, MenuRotate, StaticImage
 from engine.updater.updater import ReversedLayeredUpdates
 
+from engine.game.activate_input_popup import activate_input_popup
 from engine.game.menu_option import menu_option
 from engine.game.menu_main import menu_main
 from engine.game.menu_keybind import menu_keybind
 from engine.game.menu_game_editor import menu_game_editor
 from engine.game.loading_screen import loading_screen
+from engine.game.change_pause_update import change_pause_update
 from engine.game.create_troop_sprite_pool import create_troop_sprite_pool
 from engine.game.create_troop_sprite import create_troop_sprite
 from engine.game.create_team_coa import create_team_coa
@@ -110,9 +112,11 @@ class Game:
                                  "hat-1": "U. Arrow", "hat+1": "D. Arrow"}}
 
     # import from game
+    activate_input_popup = activate_input_popup
     assign_key = assign_key
     back_mainmenu = back_mainmenu
     change_battle_source = change_battle_source
+    change_pause_update = change_pause_update
     change_sound_volume = change_sound_volume
     create_config = create_config
     create_preview_map = create_preview_map
@@ -621,10 +625,11 @@ class Game:
         self.input_close_button = input_ui_dict["input_close_button"]
         self.input_cancel_button = input_ui_dict["input_cancel_button"]
         self.input_box = input_ui_dict["input_box"]
-        self.confirm_ui = input_ui_dict["confirm_ui"]
         self.input_ui_popup = (self.input_ok_button, self.input_cancel_button, self.input_ui, self.input_box)
-        self.confirm_ui_popup = (self.input_ok_button, self.input_cancel_button, self.confirm_ui)
+        self.confirm_ui_popup = (self.input_ok_button, self.input_cancel_button, self.input_ui)
         self.inform_ui_popup = (self.input_close_button, self.input_ui, self.input_box)
+        self.all_input_ui_popup = (self.input_ok_button, self.input_cancel_button, self.input_close_button,
+                                   self.input_ui, self.input_box)
 
         editor_dict = make_editor_ui(self.module_dir, self.screen_scale, self.screen_rect,
                                      load_image(self.module_dir, self.screen_scale, "name_list.png",
@@ -703,10 +708,10 @@ class Game:
         # self.background = self.background_image["main"]
 
         # Starting script
-        self.add_ui_updater(*self.mainmenu_button)
+        self.add_ui_updater(self.mainmenu_button)
 
         self.start_menu_ui_only = self.mainmenu_button  # ui that only appear at the start menu
-        self.add_ui_updater(*self.start_menu_ui_only)
+        self.add_ui_updater(self.start_menu_ui_only)
         self.menu_state = "main_menu"
         self.input_popup = None  # popup for text input state
         self.choosing_faction = True  # swap list between faction and unit, always start with choose faction first as true
@@ -842,6 +847,7 @@ class Game:
 
             if self.input_popup:  # currently, have input text pop up on screen, stop everything else until done
                 if self.input_ok_button.event_press or key_press[pygame.K_RETURN] or key_press[pygame.K_KP_ENTER]:
+                    done = True
                     if self.input_popup[1] == "profile_name":
                         self.profile_name = self.input_box.text
                         self.profile_box.change_text(self.profile_name)
@@ -853,9 +859,27 @@ class Game:
                         pos = pos.replace("(", "").replace(")", "").split(", ")
                         pos = [float(item) for item in pos]
                         self.play_map_data["camp_pos"][int(self.input_popup[1][-1])].insert(0, [pos, int(self.input_box.text)])
-                        self.camp_icon.insert(0, TempUnitIcon(int(self.input_popup[1][-1]), self.input_box.text, 0))
+                        self.camp_icon.insert(0, TempUnitIcon(int(self.input_popup[1][-1]),
+                                                              self.input_box.text, self.input_box.text, 0))
                         self.unit_selector.setup_unit_icon(self.unit_icon, self.camp_icon)
                         self.map_preview.change_mode(1, camp_pos_list=self.play_map_data["camp_pos"])
+
+                    elif "custom_active_troop_number" in self.input_popup[1] and self.input_box.text.isdigit():
+                        for this_unit in self.unit_icon:
+                            if this_unit.selected:
+                                self.play_source_data["unit"][this_unit.who.map_id]["Troop"][self.input_popup[2]] = \
+                                    [self.input_box.text, 0]
+                                break
+                        self.activate_input_popup(("text_input", "custom_reserve_troop_number",
+                                                   self.input_popup[2]), "Reserve troop number:", self.input_ui_popup)
+                        done = False
+
+                    elif "custom_reserve_troop_number" in self.input_popup[1] and self.input_box.text.isdigit():
+                        for this_unit in self.unit_icon:
+                            if this_unit.selected:
+                                self.play_source_data["unit"][this_unit.who.map_id]["Troop"][self.input_popup[2]][1] = \
+                                    self.input_box.text
+                                break
 
                     elif "replace key" in self.input_popup[1]:
                         old_key = self.player1_key_bind[self.config["USER"]["control player 1"]][self.input_popup[1][1]]
@@ -902,14 +926,17 @@ class Game:
                         pygame.quit()
                         sys.exit()
 
-                    self.input_box.text_start("")
-                    self.input_popup = None
-                    self.remove_ui_updater(*self.input_ui_popup, *self.confirm_ui_popup, *self.inform_ui_popup)
+                    if done:
+                        self.change_pause_update(False, self.main_ui_updater)
+                        self.input_box.text_start("")
+                        self.input_popup = None
+                        self.remove_ui_updater(self.all_input_ui_popup)
 
                 elif self.input_cancel_button.event_press or self.input_close_button.event_press or esc_press:
+                    self.change_pause_update(False, self.main_ui_updater)
                     self.input_box.text_start("")
                     self.input_popup = None
-                    self.remove_ui_updater(*self.input_ui_popup, *self.confirm_ui_popup, *self.inform_ui_popup)
+                    self.remove_ui_updater(self.all_input_ui_popup)
 
                 elif self.input_popup[0] == "text_input":
                     if self.text_delay == 0:

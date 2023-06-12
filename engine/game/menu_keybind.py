@@ -50,17 +50,15 @@ def menu_keybind(self, esc_press):
                                      None)
 
         else:
-            self.input_popup = ("confirm_input", "warning")
-            self.input_ui.change_instruction("No joysticks detected")
-            self.add_ui_updater(self.inform_ui_popup)
+            self.activate_input_popup(("confirm_input", "warning"),
+                                      "No joysticks detected", self.inform_ui_popup)
 
     else:
         for key, value in self.keybind_icon.items():
             if value.event_press:
-                self.input_popup = ("keybind_input", key)
-                self.input_ui.change_instruction("Assign key for " + key)
+                self.activate_input_popup(("keybind_input", key),
+                                          "Assign key for " + key, self.inform_ui_popup)
                 current_key = self.player1_key_bind[self.config["USER"]["control player 1"]][key]
                 if type(current_key) == int:
                     current_key = pygame.key.name(current_key)
                 self.input_box.text_start("Current Key: " + current_key)
-                self.add_ui_updater(self.inform_ui_popup)

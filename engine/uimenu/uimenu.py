@@ -135,14 +135,16 @@ class UIMenu(Sprite):
         self.event_press = False
         self.event_hold = False
         self.mouse_over = False
+        self.pause = False
 
     def update(self):
         self.event = False
         self.event_press = False
         self.event_hold = False  # some UI differentiates between press release or holding, if not just use event
         self.mouse_over = False
-        if self.rect.collidepoint(self.cursor.pos):
+        if not self.pause and self.rect.collidepoint(self.cursor.pos):
             self.mouse_over = True
+            self.cursor.mouse_over_something = True
             if self.player_interact:
                 if self.cursor.is_select_just_up or self.cursor.is_select_down:
                     self.event = True
@@ -169,6 +171,7 @@ class MenuCursor(UIMenu):
         self.is_alt_select_just_down = False
         self.is_alt_select_down = False
         self.is_alt_select_just_up = False
+        self.mouse_over_something = False  # for checking if mouse over already checked on UI starting from top layer
         self.scroll_up = False
         self.scroll_down = False
 
@@ -176,6 +179,7 @@ class MenuCursor(UIMenu):
         """Update cursor position based on mouse position and mouse button click"""
         self.pos = mouse.get_pos()
         self.rect.topleft = self.pos
+        self.mouse_over_something = False
         self.is_select_just_down, self.is_select_down, self.is_select_just_up = keyboard_mouse_press_check(
             mouse, 0, self.is_select_just_down, self.is_select_down, self.is_select_just_up)
 
@@ -423,7 +427,7 @@ class MenuButton(UIMenu):
         self.event_press = False
         self.mouse_over = False
         self.image = self.button_normal_image
-        if self.rect.collidepoint(self.cursor.pos):
+        if not self.pause and self.rect.collidepoint(self.cursor.pos):
             self.mouse_over = True
             self.image = self.button_over_image
             if self.cursor.is_select_just_up:
@@ -563,7 +567,7 @@ class BrownMenuButton(UIMenu, Containable):  # NOTE: the button is not brown any
         self.event = False
 
         self.mouse_over = False
-        if self.rect.collidepoint(mouse_pos):
+        if not self.pause and self.rect.collidepoint(mouse_pos):
             self.mouse_over = True
             if sju:
                 self.event = True
@@ -1322,12 +1326,12 @@ class OrgChart(UIMenu):
     def add_chart(self, unit_data, preview_unit, selected=None):
         self.image = self.base_image.copy()
         self.node_rect = {}
-
         if selected is not None:
             graph_input = nx.Graph()
 
             edge_list = [(unit["Temp Leader"], index) for index, unit in enumerate(unit_data) if
                          type(unit["Temp Leader"]) is int]
+            print(edge_list)
             try:
                 graph_input.add_edges_from(edge_list)
                 pos = self.hierarchy_pos(graph_input, root=selected, width=self.image.get_width(),
@@ -1599,7 +1603,7 @@ class ListUI(UIMenu, Containable):
 
         # detect if in list or over scroll box
         self.in_scroll_box = False
-        if self.rect.collidepoint(mouse_pos):
+        if not self.pause and self.rect.collidepoint(mouse_pos):
             in_list = True
             self.mouse_over = True
             if scroll_bar_rect := self.get_scroll_bar_rect():
@@ -1651,7 +1655,8 @@ class ListUI(UIMenu, Containable):
             if self.selected_index is not None:
                 if self.selected_index >= len(self.items): self.selected_index = None
 
-            if in_list and self.selected_index is not None:
+            if in_list and self.selected_index is not None and not self.cursor.mouse_over_something:
+                self.cursor.mouse_over_something = True
                 self.items.on_mouse_over(self.selected_index, self.items[self.selected_index])
                 if self.cursor.is_select_just_up or self.cursor.is_alt_select_just_up:
                     self.items.on_select(self.selected_index, self.items[self.selected_index])
